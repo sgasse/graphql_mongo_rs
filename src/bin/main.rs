@@ -5,6 +5,7 @@ use async_graphql::{
 };
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use gql_server_rs::hotel::{HotelSchema, MutationRoot, QueryRoot};
+use mongodb::{options::ClientOptions, Client};
 
 async fn index(schema: web::Data<HotelSchema>, req: GraphQLRequest) -> GraphQLResponse {
     schema.execute(req.into_inner()).await.into()
@@ -18,9 +19,35 @@ async fn index_playground() -> actix_web::Result<HttpResponse> {
         )))
 }
 
+async fn db_client() -> Client {
+    // Parse a connection string into an options struct.
+    let mut client_options = ClientOptions::parse("mongodb://localhost:27017")
+        .await
+        .expect("Client options");
+
+    // Manually set an option.
+    client_options.app_name = Some("My App".to_string());
+
+    // Get a handle to the deployment.
+    let client = Client::with_options(client_options).expect("Client with options");
+
+    // List the names of the databases in that deployment.
+    for db_name in client
+        .list_database_names(None, None)
+        .await
+        .expect("List databases")
+    {
+        println!("{}", db_name);
+    }
+
+    client
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let schema = Schema::build(QueryRoot, MutationRoot, EmptySubscription).finish();
+    let schema = Schema::build(QueryRoot, MutationRoot, EmptySubscription)
+        .data(db_client().await)
+        .finish();
 
     println!("Playground: http://localhost:8080");
 
