@@ -1,0 +1,19 @@
+[package]
+name = "gql_server_rs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "gql_server_rs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gql_server_rs"
+path = "src/bin/main.rs"
+
+[dependencies]
+async-graphql = "4.0.1"
+async-graphql-actix-web = "4.0.1"
+actix-web = { version = "4.0.1", default-features = false, features = [
+    "macros",
+] }
