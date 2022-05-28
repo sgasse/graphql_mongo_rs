@@ -1,10 +1,10 @@
 use actix_web::{guard, web, App, HttpResponse, HttpServer};
 use async_graphql::{
     http::{playground_source, GraphQLPlaygroundConfig},
-    EmptyMutation, EmptySubscription, Schema,
+    EmptySubscription, Schema,
 };
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
-use gql_server_rs::hotel::{HotelSchema, QueryRoot};
+use gql_server_rs::hotel::{HotelSchema, MutationRoot, QueryRoot};
 
 async fn index(schema: web::Data<HotelSchema>, req: GraphQLRequest) -> GraphQLResponse {
     schema.execute(req.into_inner()).await.into()
@@ -20,7 +20,7 @@ async fn index_playground() -> actix_web::Result<HttpResponse> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription).finish();
+    let schema = Schema::build(QueryRoot, MutationRoot, EmptySubscription).finish();
 
     println!("Playground: http://localhost:8080");
 

@@ -1,8 +1,6 @@
-use async_graphql::{
-    ComplexObject, Context, EmptyMutation, EmptySubscription, Object, Schema, SimpleObject,
-};
+use async_graphql::{ComplexObject, Context, EmptySubscription, Object, Schema, SimpleObject};
 
-pub type HotelSchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
+pub type HotelSchema = Schema<QueryRoot, MutationRoot, EmptySubscription>;
 
 #[derive(SimpleObject)]
 #[graphql(complex)]
@@ -29,5 +27,24 @@ impl QueryRoot {
             last_name: "Doe".into(),
             date_of_birth: "1991-01-01".into(),
         }]
+    }
+}
+
+pub struct MutationRoot;
+
+#[Object]
+impl MutationRoot {
+    async fn create_guest(
+        &self,
+        ctx: &Context<'_>,
+        first_name: String,
+        last_name: String,
+        date_of_birth: String,
+    ) -> String {
+        println!(
+            "Would create guest {} {} born on {}",
+            first_name, last_name, date_of_birth
+        );
+        "guest_hash".into()
     }
 }
