@@ -1,8 +1,8 @@
+use crate::sha256_hash;
 use async_graphql::{Context, EmptySubscription, Object, Schema, SimpleObject};
-use base64ct::{Base64, Encoding};
 use mongodb::Client;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
+
 pub type HotelSchema = Schema<QueryRoot, MutationRoot, EmptySubscription>;
 
 #[derive(SimpleObject, Serialize, Deserialize)]
@@ -46,7 +46,7 @@ impl MutationRoot {
         last_name: String,
         date_of_birth: String,
     ) -> String {
-        let uuid = guest_hash(&first_name, &last_name, &date_of_birth);
+        let uuid = sha256_hash!(&first_name, &last_name, &date_of_birth);
         let new_guest = Guest {
             first_name,
             last_name,
@@ -61,14 +61,4 @@ impl MutationRoot {
             .expect("Insert doc");
         new_guest.uuid
     }
-}
-
-fn guest_hash(first_name: &str, last_name: &str, date_of_birth: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(first_name);
-    hasher.update(last_name);
-    hasher.update(date_of_birth);
-    let hash = hasher.finalize();
-
-    Base64::encode_string(&hash)
 }

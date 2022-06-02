@@ -4,7 +4,7 @@ use async_graphql::{
     EmptySubscription, Schema,
 };
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
-use gql_server_rs::hotel::{HotelSchema, MutationRoot, QueryRoot};
+use gql_server_rs::model::{HotelSchema, MutationRoot, QueryRoot};
 use mongodb::{options::ClientOptions, Client};
 
 async fn index(schema: web::Data<HotelSchema>, req: GraphQLRequest) -> GraphQLResponse {
