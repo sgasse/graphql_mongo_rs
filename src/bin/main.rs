@@ -19,9 +19,9 @@ async fn index_playground() -> actix_web::Result<HttpResponse> {
         )))
 }
 
-async fn db_client() -> Client {
+async fn db_client(mongo_url: &str) -> Client {
     // Parse a connection string into an options struct.
-    let mut client_options = ClientOptions::parse("mongodb://localhost:27017")
+    let mut client_options = ClientOptions::parse(mongo_url)
         .await
         .expect("Client options");
 
@@ -32,6 +32,7 @@ async fn db_client() -> Client {
     let client = Client::with_options(client_options).expect("Client with options");
 
     // List the names of the databases in that deployment.
+    println!("Connected to MongoDB at {}\nCollections:", mongo_url);
     for db_name in client
         .list_database_names(None, None)
         .await
@@ -45,11 +46,14 @@ async fn db_client() -> Client {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let mongo_url = "mongodb://localhost:27017";
+    let playground_address = "127.0.0.1:8080";
+
     let schema = Schema::build(QueryRoot, MutationRoot, EmptySubscription)
-        .data(db_client().await)
+        .data(db_client(mongo_url).await)
         .finish();
 
-    println!("Playground: http://localhost:8080");
+    println!("Playground at: http://{}", playground_address);
 
     HttpServer::new(move || {
         App::new()
@@ -57,7 +61,7 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/").guard(guard::Post()).to(index))
             .service(web::resource("/").guard(guard::Get()).to(index_playground))
     })
-    .bind("127.0.0.1:8080")?
+    .bind(playground_address)?
     .run()
     .await
 }

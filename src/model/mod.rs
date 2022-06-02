@@ -1,11 +1,13 @@
 use crate::sha256_hash;
 use async_graphql::{Context, EmptySubscription, Object, Schema, SimpleObject};
+use futures::stream::TryStreamExt;
+use mongodb::bson::doc;
 use mongodb::Client;
 use serde::{Deserialize, Serialize};
 
 pub type HotelSchema = Schema<QueryRoot, MutationRoot, EmptySubscription>;
 
-#[derive(SimpleObject, Serialize, Deserialize)]
+#[derive(SimpleObject, Serialize, Deserialize, Debug)]
 pub struct Guest {
     first_name: String,
     last_name: String,
@@ -18,20 +20,19 @@ pub struct QueryRoot;
 #[Object]
 impl QueryRoot {
     async fn guests(&self, ctx: &Context<'_>) -> Vec<Guest> {
-        let client = ctx.data::<Client>().expect("MongoDB client");
-        for db_name in client
-            .list_database_names(None, None)
-            .await
-            .expect("List databases")
-        {
-            println!("DB in guests: {}", db_name);
+        let db = ctx
+            .data::<Client>()
+            .expect("MongoDB client")
+            .database("hotel");
+
+        let guests_col = db.collection::<Guest>("guests");
+        let mut cursor = guests_col.find(doc! {}, None).await.expect("Get cursor");
+
+        let mut guests: Vec<Guest> = vec![];
+        while let Some(guest) = cursor.try_next().await.expect("Receive from cursor") {
+            guests.push(guest);
         }
-        vec![Guest {
-            first_name: "John".into(),
-            last_name: "Doe".into(),
-            date_of_birth: "1991-01-01".into(),
-            uuid: "the_uuid".into(),
-        }]
+        guests
     }
 }
 
@@ -54,11 +55,12 @@ impl MutationRoot {
             uuid,
         };
         let db = ctx.data::<Client>().expect("DB Client").database("hotel");
-        let guests = db.collection::<Guest>("guests");
-        guests
+        let guests_col = db.collection::<Guest>("guests");
+        guests_col
             .insert_one(&new_guest, None)
             .await
             .expect("Insert doc");
-        new_guest.uuid
+        println!("Created new guest:\n{:?}", &new_guest);
+        new_guest.uuid.clone()
     }
 }
