@@ -22,3 +22,6 @@ serde = { version = "1.0.137", features = ["derive"] }
 sha2 = "0.10.2"
 base64ct = { version = "1.5.0", features = ["alloc"] }
 futures = "0.3.21"
+type_pubsub = "0.2.0"
+tokio = "1.18.2"
+async-stream = "0.3.3"

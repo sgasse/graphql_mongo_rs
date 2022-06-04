@@ -1,6 +1,13 @@
 pub mod model;
+use std::sync::Arc;
+
 pub use base64ct::{Base64, Encoding};
 pub use sha2::{Digest, Sha256};
+
+use tokio::sync::RwLock;
+use type_pubsub::TypePubSub;
+
+type PubSub = Arc<RwLock<TypePubSub>>;
 
 #[macro_export]
 macro_rules! sha256_hash {
