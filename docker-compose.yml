@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  mongodb:
+    image: mongo:5.0.8
+    restart: always
+    volumes:
+      - mongo_vol:/data/db
+    ports:
+      - "127.0.0.1:27017:27017"
+    networks:
+      - hotel
+
+  gql_server_rs:
+    image: gql_server_rs
+    build:
+      context: ./gql_server_rs
+    command:
+      [
+        "--mongo-host",
+        "mongodb",
+        "--gql-bind-address",
+        "0.0.0.0"
+      ]
+    restart: always
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - hotel
+
+volumes:
+  mongo_vol:
+
+
+networks:
+  hotel:
