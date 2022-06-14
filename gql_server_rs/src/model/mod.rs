@@ -30,8 +30,12 @@ impl QueryRoot {
         let mut cursor = guests_col.find(doc! {}, None).await.expect("Get cursor");
 
         let mut guests: Vec<Guest> = vec![];
-        while let Some(guest) = cursor.try_next().await.expect("Receive from cursor") {
-            guests.push(guest);
+        loop {
+            match cursor.try_next().await {
+                Ok(Some(guest)) => guests.push(guest),
+                Ok(None) => break,
+                Err(err) => println!("Error in reading cursor: {}", &err),
+            }
         }
         guests
     }
